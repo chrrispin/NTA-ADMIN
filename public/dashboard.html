@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NTA-ADMIN</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>NTA ADMIN</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="#users" class="nav-link" data-page="users">
+                    <span>👥</span> Users
+                </a>
+                <a href="#settings" class="nav-link" data-page="settings">
+                    <span>⚙️</span> Settings
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-info">
+                    <span id="userDisplay">Loading...</span>
+                </div>
+            </header>
+            
+            <div class="content-area">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Users</h3>
+                            <p class="stat-value" id="totalUsers">-</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Users</h3>
+                            <p class="stat-value" id="activeUsers">-</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Sessions</h3>
+                            <p class="stat-value" id="totalSessions">-</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>System Status</h3>
+                            <p class="stat-value" id="systemStatus">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="welcome-section">
+                        <h2>Welcome to New Time Africa Admin Portal</h2>
+                        <p>Manage your organization efficiently with our comprehensive admin dashboard.</p>
+                    </div>
+                </div>
+                
+                <!-- Users Page -->
+                <div id="users-page" class="page">
+                    <div class="page-header">
+                        <h2>User Management</h2>
+                    </div>
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Settings Page -->
+                <div id="settings-page" class="page">
+                    <div class="page-header">
+                        <h2>Settings</h2>
+                    </div>
+                    <div class="settings-section">
+                        <h3>System Configuration</h3>
+                        <p>System settings and configurations will be available here.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="dashboard.js"></script>
+</body>
+</html>

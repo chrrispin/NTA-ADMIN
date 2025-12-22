@@ -1,17 +1,35 @@
 // ✅ Correct API base URL fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+export interface SubLink {
+  title?: string;
+  url?: string;
+  image_url?: string;
+}
+
+// Admin Article shape aligned with backend while keeping existing fields
 export interface Article {
   id?: string;
+  // Core
   title: string;
   slug?: string;
-  excerpt: string;
-  content: string;
-  featuredImage?: string;
-  category: string;
-  page?: string;
+  // Admin-side fields
+  excerpt: string; // maps to backend summary
+  content: string; // not persisted in backend currently
+  featuredImage?: string; // maps to backend image_url
+  category: string; // maps to backend section
+  page?: string; // backend page
   author?: string;
-  status: 'published' | 'draft';
+  status: 'published' | 'draft'; // maps to backend is_live
+  // Feature flags
+  isAudioPick?: boolean; // for AudioCarousel
+  isHot?: boolean; // for HotNews
+  // Backend-aligned optional fields for compatibility
+  summary?: string;
+  image_url?: string;
+  is_live?: boolean;
+  section?: string;
+  subLinks?: SubLink[];
   views?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -73,7 +91,9 @@ export const articlesApi = {
       summary: article.excerpt || null,
       is_live: article.status === 'published',
       page: article.page || 'Home',
-      subLinks: [],
+      isAudioPick: article.isAudioPick || false,
+      isHot: article.isHot || false,
+      subLinks: Array.isArray(article.subLinks) ? article.subLinks : [],
     };
 
     const response = await fetch(`${API_BASE_URL}/articles`, {
@@ -96,7 +116,9 @@ export const articlesApi = {
       summary: article.excerpt,
       is_live: article.status === 'published',
       page: article.page,
-      subLinks: [],
+      isAudioPick: article.isAudioPick || false,
+      isHot: article.isHot || false,
+      subLinks: Array.isArray(article.subLinks) ? article.subLinks : [],
     };
 
     const response = await fetch(`${API_BASE_URL}/articles/${id}`, {

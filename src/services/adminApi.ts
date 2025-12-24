@@ -70,7 +70,13 @@ export const articlesApi = {
         'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
       },
     });
-    return handleResponse<Article[]>(response);
+    const json = await response.json();
+    
+    return {
+      success: response.ok,
+      data: json.articles || [], // Backend returns { articles: [...] }
+      message: json.message,
+    };
   },
 
   async getById(id: string): Promise<ApiResponse<Article>> {

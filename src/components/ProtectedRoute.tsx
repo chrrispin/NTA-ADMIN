@@ -1,6 +1,3 @@
-import { Navigate } from 'react-router-dom';
-import { authApi } from '../services/adminApi';
-
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }

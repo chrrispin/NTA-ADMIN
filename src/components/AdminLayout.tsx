@@ -40,7 +40,7 @@ export default function AdminLayout() {
           </Link>
         </nav>
         <div className={styles.footer}>
-          <p className={styles.footerNote}>NTA Admin</p>
+          <p className={styles.footerNote}>New Time Africa </p>
           <button className={styles.navItem} onClick={handleLogout}>Logout</button>
         </div>
       </aside>

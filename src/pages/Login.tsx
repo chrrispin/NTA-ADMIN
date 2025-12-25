@@ -106,7 +106,7 @@ export default function Login() {
           </form>
 
           <div className={styles.footer}>
-            <p>Don't have an account?{' '}
+            <p>Don't have an account yet?{' '}
               <Link to="/signup" className={styles.link}>
                 Sign up here
               </Link>

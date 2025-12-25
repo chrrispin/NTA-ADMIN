@@ -1,48 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { articlesApi } from '../services/adminApi';
+import { articlesApi, API_BASE_URL } from '../services/adminApi';
 import type { Article, SubLink } from '../services/adminApi';
 import styles from './AdminArticleForm.module.css';
 
 const CATEGORIES = [
-  'news1',
-  'news2',
-  'news3',
-  'news4',
-  'news5',
-  'news6',
-  'video',
-  'news7',
-  'Hero',
-  'Technology',
-  'Business',
-  'Lifestyle',
-  'Health',
-  'Education',
-  'Entertainment',
-  'Network',
-  'YouTube Picks',
-  'Hot News',
-  'Trending Now',
-  'Feature Highlights',
-  'Featured Sections',
-  'Watch',
-  'Photos'
+  // core layout sections
+  'news1', 'news2', 'news3', 'news4', 'news5', 'news6', 'news7', 'video',
+  // editorial/topical groups
+  'Hero', 'Technology', 'Business', 'Lifestyle', 'Health', 'Education', 'Entertainment', 'Network',
+  'YouTube Picks', 'Hot News', 'Trending Now', 'Feature Highlights', 'Featured Sections', 'Watch', 'Photos',
+  // custom sections used on site (match frontend queries exactly)
+  'african-trends', 'mini-left', 'trading-youtube', 'more_news'
 ];
 
 const PAGES = [
-  'Home',
-  'Africa',
-  'Europe',
-  'Sports',
-  'Politics',
-  'Style',
-  'Travel',
-  'Business',
-  'Opinion',
-  'Health',
-  'Video',
-  'Entertainment'
+  'Home', 'Africa', 'Europe', 'Sports', 'Politics', 'Style', 'Travel', 'Business', 'Opinion', 'Health', 'Video', 'Entertainment'
 ];
 
 export default function AdminArticleForm() {
@@ -54,7 +27,6 @@ export default function AdminArticleForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageSource, setImageSource] = useState<'url' | 'upload'>('url');
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Article>({
     title: '',
@@ -164,7 +136,7 @@ export default function AdminArticleForm() {
     });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -176,31 +148,39 @@ export default function AdminArticleForm() {
       return;
     }
 
-    if (isVideo) {
-      // Block raw video uploads because backend only stores URLs
-      setError('Upload a hosted video URL instead of a video file (MP4/WebM link).');
-      return;
-    }
-
-    // Image uploads only (videos must be URL-based)
-    const maxSizeBytes = 5 * 1024 * 1024;
+    // Size limits: 10MB images, 100MB videos
+    const maxSizeBytes = isImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      setError('Image size must be less than 5MB');
+      setError(isImage ? 'Image size must be less than 10MB' : 'Video size must be less than 100MB');
       return;
     }
 
-    // Convert to Data URL for preview and submission
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setUploadedImage(dataUrl);
+    // Upload to backend and receive a URL to store
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    try {
+      setSubmitting(true);
+      const resp = await fetch(`${API_BASE_URL}/uploads`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
+        },
+        body: formDataUpload,
+      });
+      const json = await resp.json();
+      if (!resp.ok || !json.success || !json.url) {
+        throw new Error(json.message || 'Upload failed');
+      }
       setFormData(prev => ({
         ...prev,
-        featuredImage: dataUrl,
+        featuredImage: json.url,
       }));
       setError(null);
-    };
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload media');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -335,7 +315,7 @@ export default function AdminArticleForm() {
                 onChange={handleChange}
                 required
               >
-                {PAGES.map(page => (
+                {PAGES.map((page: string) => (
                   <option key={page} value={page}>{page}</option>
                 ))}
               </select>
@@ -355,7 +335,7 @@ export default function AdminArticleForm() {
           </div>
 
           <div className={styles.fullWidth}>
-            <label>Featured Media (image upload or video URL)</label>
+            <label>Featured Media (image/video upload or URL)</label>
             <div className="space-y-3">
               <div className="flex gap-4 mb-3">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -376,7 +356,7 @@ export default function AdminArticleForm() {
                     checked={imageSource === 'upload'}
                     onChange={(e) => setImageSource(e.target.value as 'url' | 'upload')}
                   />
-                  <span>Upload Image File</span>
+                  <span>Upload Image/Video File</span>
                 </label>
               </div>
 
@@ -399,7 +379,7 @@ export default function AdminArticleForm() {
                     onChange={handleImageUpload}
                     className="w-full px-3 py-2 border rounded"
                   />
-                  <p className="text-xs text-gray-500 mt-2">Images up to 5MB (JPG, PNG, WebP, GIF). For video, use the URL option (MP4/WebM). Selecting a video file will prompt you to paste a URL instead.</p>
+                  <p className="text-xs text-gray-500 mt-2">Images up to 10MB (JPG, PNG, WebP, GIF). Videos up to 100MB (MP4/WebM/OGG). Uploaded files are stored and referenced via URL.</p>
                 </div>
               )}
 

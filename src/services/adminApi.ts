@@ -1,5 +1,5 @@
 // ✅ Correct API base URL fallback
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nta-backend-re6q.onrender.com/api';
 
 export interface SubLink {
   title?: string;

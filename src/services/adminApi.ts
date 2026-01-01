@@ -7,6 +7,12 @@ export interface SubLink {
   image_url?: string;
 }
 
+export interface MediaItem {
+  url: string;
+  type: 'image' | 'video';
+  caption?: string;
+}
+
 // Admin Article shape aligned with backend while keeping existing fields
 export interface Article {
   id?: string;
@@ -30,6 +36,7 @@ export interface Article {
   is_live?: boolean;
   section?: string;
   subLinks?: SubLink[];
+  media?: MediaItem[];
   views?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -107,11 +114,13 @@ export const articlesApi = {
       slug: article.slug || null,
       image_url: article.featuredImage || null,
       summary: article.excerpt || null,
+      content: article.content || null,
       is_live: article.status === 'published',
       page: article.page || 'Home',
       isAudioPick: article.isAudioPick || false,
       isHot: article.isHot || false,
       subLinks: Array.isArray(article.subLinks) ? article.subLinks : [],
+      media: Array.isArray(article.media) ? article.media : [],
     };
 
     const response = await fetch(`${API_BASE_URL}/articles`, {
@@ -132,11 +141,13 @@ export const articlesApi = {
       slug: article.slug,
       image_url: article.featuredImage,
       summary: article.excerpt,
+      content: article.content,
       is_live: article.status === 'published',
       page: article.page,
       isAudioPick: article.isAudioPick || false,
       isHot: article.isHot || false,
       subLinks: Array.isArray(article.subLinks) ? article.subLinks : [],
+      media: Array.isArray(article.media) ? article.media : [],
     };
 
     const response = await fetch(`${API_BASE_URL}/articles/${id}`, {

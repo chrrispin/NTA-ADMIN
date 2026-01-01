@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { articlesApi, API_BASE_URL } from '../services/adminApi';
-import type { Article, SubLink } from '../services/adminApi';
+import type { Article, SubLink, MediaItem } from '../services/adminApi';
 import styles from './AdminArticleForm.module.css';
 
 const CATEGORIES = [
@@ -27,6 +27,8 @@ export default function AdminArticleForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageSource, setImageSource] = useState<'url' | 'upload'>('url');
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [formData, setFormData] = useState<Article>({
     title: '',
@@ -39,6 +41,7 @@ export default function AdminArticleForm() {
     author: '',
     featuredImage: '',
     subLinks: [],
+    media: [],
     isAudioPick: false,
     isHot: false,
   });
@@ -69,6 +72,7 @@ export default function AdminArticleForm() {
           author: prev.author || '',
           featuredImage: data.image_url || '',
           subLinks: Array.isArray(data.subLinks) ? data.subLinks : [],
+          media: Array.isArray(data.media) ? data.media : [],
           isAudioPick: data.isAudioPick || false,
           isHot: data.isHot || false,
         }));
@@ -136,6 +140,69 @@ export default function AdminArticleForm() {
     });
   };
 
+  const handleAddMedia = () => {
+    setFormData(prev => ({
+      ...prev,
+      media: [...(prev.media || []), { url: '', type: 'image', caption: '' }],
+    }));
+  };
+
+  const handleMediaChange = (index: number, field: keyof MediaItem, value: string) => {
+    setFormData(prev => {
+      const media = [...(prev.media || [])];
+      media[index] = { ...media[index], [field]: value } as MediaItem;
+      return { ...prev, media };
+    });
+  };
+
+  const handleRemoveMedia = (index: number) => {
+    setFormData(prev => {
+      const media = [...(prev.media || [])];
+      media.splice(index, 1);
+      return { ...prev, media };
+    });
+  };
+
+  const handleMediaUpload = async (index: number, file: File) => {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      setError('Please select an image or video file');
+      return;
+    }
+
+    const maxSizeBytes = isImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      setError(isImage ? 'Image size must be less than 10MB' : 'Video size must be less than 100MB');
+      return;
+    }
+
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    try {
+      setSubmitting(true);
+      const resp = await fetch(`${API_BASE_URL}/uploads`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
+        },
+        body: formDataUpload,
+      });
+      const json = await resp.json();
+      if (!resp.ok || !json.success || !json.url) {
+        throw new Error(json.message || 'Upload failed');
+      }
+      handleMediaChange(index, 'url', json.url);
+      handleMediaChange(index, 'type', isVideo ? 'video' : 'image');
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload media');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -181,6 +248,47 @@ export default function AdminArticleForm() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleInsertMediaIntoContent = () => {
+    if (selectedMediaIndex === null) {
+      setError('Select a media item to insert');
+      return;
+    }
+
+    const item = formData.media?.[selectedMediaIndex];
+    if (!item || !item.url) {
+      setError('Selected media item is missing a URL');
+      return;
+    }
+
+    const captionHtml = item.caption ? `<figcaption>${item.caption}</figcaption>` : '';
+    const snippet = item.type === 'video'
+      ? `<figure><video controls src="${item.url}"></video>${captionHtml}</figure>`
+      : `<figure><img src="${item.url}" alt="${item.caption || ''}" />${captionHtml}</figure>`;
+
+    const textarea = contentRef.current;
+    const content = formData.content || '';
+    const start = textarea?.selectionStart ?? content.length;
+    const end = textarea?.selectionEnd ?? start;
+    const block = `${snippet}\n\n`;
+
+    const nextContent = `${content.slice(0, start)}${block}${content.slice(end)}`;
+
+    setFormData(prev => ({
+      ...prev,
+      content: nextContent,
+    }));
+
+    // restore cursor just after inserted block
+    setTimeout(() => {
+      if (textarea) {
+        const pos = start + block.length;
+        textarea.focus();
+        textarea.setSelectionRange(pos, pos);
+      }
+    }, 0);
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -479,16 +587,117 @@ export default function AdminArticleForm() {
           </div>
 
           <div className={styles.fullWidth}>
+            <label>Additional Media Gallery (Images & Videos)</label>
+            <p className="text-sm text-gray-600 mb-3">Add multiple images and videos to display within your article content</p>
+            {(formData.media || []).map((item, idx) => (
+              <div key={idx} className="border rounded p-4 mb-4">
+                <div className={styles.twoCol}>
+                  <div>
+                    <label>Media Type</label>
+                    <select
+                      value={item.type}
+                      onChange={(e) => handleMediaChange(idx, 'type', e.target.value)}
+                      className="w-full px-3 py-2 border rounded"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Upload File</label>
+                    <input
+                      type="file"
+                      accept={item.type === 'video' ? 'video/*' : 'image/*'}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleMediaUpload(idx, file);
+                      }}
+                      className="w-full px-3 py-2 border rounded"
+                    />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <label>Or paste URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/media.jpg"
+                    value={item.url}
+                    onChange={(e) => handleMediaChange(idx, 'url', e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                  />
+                </div>
+                <div className="mt-3">
+                  <label>Caption (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Describe this media"
+                    value={item.caption || ''}
+                    onChange={(e) => handleMediaChange(idx, 'caption', e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                  />
+                </div>
+                {item.url && (
+                  <div className="mt-3">
+                    {item.type === 'video' ? (
+                      <video src={item.url} controls className="max-w-full h-auto max-h-48 rounded" />
+                    ) : (
+                      <img src={item.url} alt="Preview" className="max-w-full h-auto max-h-48 rounded" />
+                    )}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={`${styles.btnSecondary} mt-3`}
+                  onClick={() => handleRemoveMedia(idx)}
+                >
+                  Remove Media
+                </button>
+              </div>
+            ))}
+            <button type="button" className={styles.btnSecondary} onClick={handleAddMedia}>
+              + Add Media Item
+            </button>
+          </div>
+
+          <div className={styles.fullWidth}>
             <label htmlFor="content">Content *</label>
             <textarea
               id="content"
               name="content"
               value={formData.content}
               onChange={handleChange}
+              ref={contentRef}
               placeholder="Write your article content here... (supports plain text or markdown)"
               rows={12}
               required
             />
+            {formData.media && formData.media.length > 0 && (
+              <div className="mt-3 flex flex-col gap-2">
+                <label className="text-sm text-gray-700">Insert a media block into content</label>
+                <div className="flex gap-2 items-center">
+                  <select
+                    className="px-3 py-2 border rounded w-full"
+                    value={selectedMediaIndex ?? ''}
+                    onChange={(e) => setSelectedMediaIndex(e.target.value === '' ? null : Number(e.target.value))}
+                  >
+                    <option value="">Select media…</option>
+                    {formData.media.map((item, idx) => (
+                      <option key={idx} value={idx}>
+                        {`Media ${idx + 1} (${item.type}) - ${item.caption || item.url}`}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    onClick={handleInsertMediaIntoContent}
+                  >
+                    Insert
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">Adds a figure with image/video HTML at the end of the content.</p>
+              </div>
+            )}
             <div className={styles.charCount}>{formData.content.length} characters</div>
           </div>
         </div>

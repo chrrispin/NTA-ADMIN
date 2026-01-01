@@ -72,9 +72,21 @@ export const articlesApi = {
     });
     const json = await response.json();
     
+    // Transform backend response to frontend format
+    const articles = (json.articles || []).map((article: any) => ({
+      ...article,
+      status: article.is_live ? 'published' : 'draft',
+      category: article.section,
+      excerpt: article.summary || '',
+      featuredImage: article.image_url || '',
+      createdAt: article.created_at || article.updated_at || new Date().toISOString(),
+      updatedAt: article.updated_at || new Date().toISOString(),
+      views: typeof article.views === 'number' ? article.views : 0,
+    })) as Article[];
+    
     return {
       success: response.ok,
-      data: json.articles || [], // Backend returns { articles: [...] }
+      data: articles,
       message: json.message,
     };
   },

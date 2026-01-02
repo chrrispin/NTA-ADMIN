@@ -8,6 +8,8 @@ import AdminArticles from './pages/AdminArticles';
 import AdminArticleForm from './pages/AdminArticleForm';
 import './App.css';
 
+// Only enable signup in development or when explicitly enabled
+const ENABLE_SIGNUP = import.meta.env.VITE_ENABLE_SIGNUP === 'true';
 
 function App() {
   return (
@@ -15,7 +17,8 @@ function App() {
       <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        {/* Signup only available if explicitly enabled (for initial admin setup) */}
+        {ENABLE_SIGNUP && <Route path="/signup" element={<Signup />} />}
 
         {/* Admin Routes - Protected */}
         <Route

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/adminApi';
 import styles from './Login.module.css';
 
@@ -106,10 +106,8 @@ export default function Login() {
           </form>
 
           <div className={styles.footer}>
-            <p>Don't have an account yet?{' '}
-              <Link to="/signup" className={styles.link}>
-                Sign up here
-              </Link>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>
+              Need access? Contact your administrator
             </p>
           </div>
         </div>

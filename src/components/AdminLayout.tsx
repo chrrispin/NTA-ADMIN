@@ -39,6 +39,12 @@ export default function AdminLayout() {
             + New Article
           </Link>
           <Link
+            to="/admin/workflow"
+            className={`${styles.navItem} ${isActive('/admin/workflow') ? styles.active : ''}`}
+          >
+            Workflow & Approval
+          </Link>
+          <Link
             to="/admin/users"
             className={`${styles.navItem} ${isActive('/admin/users') ? styles.active : ''}`}
           >

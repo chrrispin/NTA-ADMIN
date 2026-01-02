@@ -139,38 +139,6 @@ export default function ArticleWorkflow() {
     }
   };
 
-  const handlePublish = async (articleId: number) => {
-    try {
-      const response = await fetch(`/api/articles/${articleId}/publish`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({}),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to publish article');
-        return;
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setArticles(articles.map(a =>
-          a.id === articleId ? { ...a, status: 'published' } : a
-        ));
-        setError(null);
-      } else {
-        setError(result.message || 'Failed to publish article');
-      }
-    } catch (err) {
-      console.error('Error publishing article:', err);
-      setError('Failed to publish article');
-    }
-  };
-
   const handleSubmit = async (articleId: number) => {
     try {
       const response = await fetch(`/api/articles/${articleId}/submit-for-review`, {

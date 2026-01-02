@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MdArticle, MdPublish, MdDrafts, MdVisibility } from 'react-icons/md';
+import { BiFileBlank, BiCheck, BiPencil, BiBarChart } from 'react-icons/bi';
 import { articlesApi } from '../services/adminApi';
 import styles from './Admin.module.css';
 
@@ -81,7 +81,7 @@ export default function Admin() {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <MdArticle size={32} />
+            <BiFileBlank size={32} />
           </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Total Articles</div>
@@ -91,7 +91,7 @@ export default function Admin() {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <MdPublish size={32} />
+            <BiCheck size={32} />
           </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Published</div>
@@ -101,7 +101,7 @@ export default function Admin() {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <MdDrafts size={32} />
+            <BiPencil size={32} />
           </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Drafts</div>
@@ -111,7 +111,7 @@ export default function Admin() {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <MdVisibility size={32} />
+            <BiBarChart size={32} />
           </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Total Views</div>

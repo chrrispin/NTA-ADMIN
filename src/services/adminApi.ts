@@ -175,7 +175,7 @@ export const articlesApi = {
 // Auth API
 export const authApi = {
   async login(email: string, password: string): Promise<ApiResponse<{ token: string }>> {
-    const response = await fetch(`${API_BASE_URL}/admin/login`, {
+    const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -190,7 +190,7 @@ export const authApi = {
   },
 
   async signup(name: string, email: string, password: string): Promise<ApiResponse<{ token: string }>> {
-    const response = await fetch(`${API_BASE_URL}/admin/signup`, {
+    const response = await fetch(`${API_BASE_URL}/auth/admin/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),

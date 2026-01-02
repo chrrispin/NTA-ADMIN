@@ -38,6 +38,12 @@ export default function AdminLayout() {
           >
             + New Article
           </Link>
+          <Link
+            to="/admin/users"
+            className={`${styles.navItem} ${isActive('/admin/users') ? styles.active : ''}`}
+          >
+            Users
+          </Link>
         </nav>
         <div className={styles.footer}>
           <p className={styles.footerNote}>New Time Africa </p>

@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import Admin from './pages/Admin';
 import AdminArticles from './pages/AdminArticles';
 import AdminArticleForm from './pages/AdminArticleForm';
+import AdminUsers from './pages/AdminUsers';
 import './App.css';
 
 // Only enable signup in development or when explicitly enabled
@@ -33,6 +34,7 @@ function App() {
           <Route path="articles" element={<AdminArticles />} />
           <Route path="articles/new" element={<AdminArticleForm />} />
           <Route path="articles/:id/edit" element={<AdminArticleForm />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
 
         {/* Fallback */}

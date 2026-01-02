@@ -71,6 +71,14 @@ export default function AdminUsers() {
           'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
         },
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || `Failed to delete user (Status: ${response.status})`);
+        console.error('Delete user error:', errorData);
+        return;
+      }
+      
       const data = await response.json();
       if (data.success) {
         setUsers(users.filter(u => u.id !== userId));
@@ -112,6 +120,14 @@ export default function AdminUsers() {
             role: formData.role,
           }),
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          setError(errorData.message || `Failed to update user (Status: ${response.status})`);
+          console.error('Update user error:', errorData);
+          return;
+        }
+        
         const data = await response.json();
         if (data.success) {
           setUsers(users.map(u =>
@@ -140,6 +156,14 @@ export default function AdminUsers() {
             role: formData.role,
           }),
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          setError(errorData.message || `Failed to create user (Status: ${response.status})`);
+          console.error('Create user error:', errorData);
+          return;
+        }
+        
         const data = await response.json();
         if (data.success) {
           setUsers([...users, {

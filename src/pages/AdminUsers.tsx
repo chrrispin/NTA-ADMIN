@@ -30,11 +30,28 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       setError(null);
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        setError('No authentication token found. Please log in again.');
+        return;
+      }
+      
       const response = await fetch('/api/auth/users', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || `Failed to fetch users (Status: ${response.status})`);
+        if (response.status === 401) {
+          console.warn('Token expired or invalid. User should log in again.');
+        }
+        return;
+      }
+      
       const data = await response.json();
       if (data.success) {
         setUsers(data.data || []);
@@ -180,7 +197,7 @@ export default function AdminUsers() {
         }
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error submitting form:', err);
       setError(editingId ? 'Failed to update user' : 'Failed to create user');
     }
   };

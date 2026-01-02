@@ -25,7 +25,7 @@ export interface Article {
   slug?: string;
   // Admin-side fields
   excerpt: string; // maps to backend summary
-  content: string; // not persisted in backend currently
+  content: string; // persisted in backend as content column
   featuredImage?: string; // maps to backend image_url
   category: string; // maps to backend section
   page?: string; // backend page

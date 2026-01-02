@@ -72,7 +72,7 @@ export default function AdminArticleForm() {
           title: data.title || '',
           slug: data.slug || '',
           excerpt: data.summary || '',
-          content: prev.content || '',
+          content: data.content || '',
           category: data.section || CATEGORIES[0],
           page: data.page || PAGES[0],
           status: data.is_live ? 'published' : 'draft',

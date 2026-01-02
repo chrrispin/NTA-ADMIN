@@ -18,6 +18,7 @@ export default function AdminUsers() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'admin',
   });
 
@@ -53,6 +54,7 @@ export default function AdminUsers() {
     setFormData({
       name: user.name,
       email: user.email,
+      password: '',
       role: user.role,
     });
     setShowForm(true);
@@ -88,32 +90,74 @@ export default function AdminUsers() {
       return;
     }
 
+    if (!editingId && !formData.password.trim()) {
+      setError('Password is required for new users');
+      return;
+    }
+
     try {
       setError(null);
-      const response = await fetch(`/api/auth/users/${editingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setUsers(users.map(u =>
-          u.id === editingId
-            ? { ...u, ...formData }
-            : u
-        ));
-        setShowForm(false);
-        setEditingId(null);
-        setFormData({ name: '', email: '', role: 'admin' });
+      
+      if (editingId) {
+        // Update existing user
+        const response = await fetch(`/api/auth/users/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUsers(users.map(u =>
+            u.id === editingId
+              ? { ...u, name: formData.name, email: formData.email, role: formData.role }
+              : u
+          ));
+          setShowForm(false);
+          setEditingId(null);
+          setFormData({ name: '', email: '', password: '', role: 'admin' });
+        } else {
+          setError(data.message || 'Failed to update user');
+        }
       } else {
-        setError(data.message || 'Failed to update user');
+        // Create new user
+        const response = await fetch(`/api/auth/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUsers([...users, {
+            id: data.data.id,
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+            created_at: new Date().toISOString(),
+          }]);
+          setShowForm(false);
+          setFormData({ name: '', email: '', password: '', role: 'admin' });
+        } else {
+          setError(data.message || 'Failed to create user');
+        }
       }
     } catch (err) {
-      console.error('Error updating user:', err);
-      setError('Failed to update user');
+      console.error('Error:', err);
+      setError(editingId ? 'Failed to update user' : 'Failed to create user');
     }
   };
 
@@ -126,7 +170,8 @@ export default function AdminUsers() {
           onClick={() => {
             setShowForm(!showForm);
             setEditingId(null);
-            setFormData({ name: '', email: '', role: 'admin' });
+            setFormData({ name: '', email: '', password: '', role: 'admin' });
+            setError(null);
           }}
         >
           {showForm ? 'Cancel' : '+ Add User'}
@@ -137,6 +182,7 @@ export default function AdminUsers() {
 
       {showForm && (
         <form className={styles.form} onSubmit={handleSubmit}>
+          <h3>{editingId ? 'Edit User' : 'Create New User'}</h3>
           <div className={styles.formGroup}>
             <label>Name</label>
             <input
@@ -163,6 +209,21 @@ export default function AdminUsers() {
             />
           </div>
 
+          {!editingId && (
+            <div className={styles.formGroup}>
+              <label>Password</label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                placeholder="Min 6 characters"
+                required
+              />
+            </div>
+          )}
+
           <div className={styles.formGroup}>
             <label>Role</label>
             <select
@@ -178,7 +239,7 @@ export default function AdminUsers() {
           </div>
 
           <button type="submit" className={styles.submitBtn}>
-            Update User
+            {editingId ? 'Update User' : 'Create User'}
           </button>
         </form>
       )}

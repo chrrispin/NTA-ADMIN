@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { BiFileBlank, BiCheck, BiPencil, BiBarChart } from 'react-icons/bi';
-import { BiLogOut, BiUser } from 'react-icons/bi';
-import { articlesApi, authApi } from '../services/adminApi';
+import { articlesApi } from '../services/adminApi';
 import styles from './Admin.module.css';
-
-interface UserProfile {
-  id?: number;
-  name?: string;
-  email?: string;
-  role?: string;
-}
 
 interface DashboardStats {
   totalArticles: number;
@@ -20,8 +11,6 @@ interface DashboardStats {
 }
 
 export default function Admin() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalArticles: 0,
     publishedArticles: 0,
@@ -32,10 +21,6 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load user profile
-    const currentUser = authApi.getUser();
-    setUser(currentUser);
-    
     // Load dashboard stats
     fetchDashboardData();
   }, []);
@@ -77,20 +62,6 @@ export default function Admin() {
     }
   };
 
-  const handleLogout = () => {
-    authApi.logout();
-    navigate('/admin/login');
-  };
-
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
-  };
-
   if (loading) {
     return (
       <div className={styles.container}>
@@ -102,26 +73,8 @@ export default function Admin() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <h1>Dashboard</h1>
-          <p>Welcome back! Here's your content overview.</p>
-        </div>
-        
-        {user && (
-          <div className={styles.profileSection}>
-            <div className={styles.profileAvatar}>
-              {getInitials(user.name)}
-            </div>
-            <div className={styles.profileInfo}>
-              <div className={styles.profileName}>{user.name || 'User'}</div>
-              <div className={styles.profileEmail}>{user.email}</div>
-              <div className={styles.profileRole}>{user.role}</div>
-            </div>
-            <button className={styles.logoutBtn} onClick={handleLogout} title="Logout">
-              <BiLogOut size={20} />
-            </button>
-          </div>
-        )}
+        <h1>Dashboard</h1>
+        <p>Welcome back! Here's your content overview.</p>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}

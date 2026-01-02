@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MdArticle, MdPublish, MdDrafts, MdVisibility } from 'react-icons/md';
 import { articlesApi } from '../services/adminApi';
 import styles from './Admin.module.css';
 
@@ -79,7 +80,9 @@ export default function Admin() {
 
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
-          <div className={styles.statIcon}>📄</div>
+          <div className={styles.statIcon}>
+            <MdArticle size={32} />
+          </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Total Articles</div>
             <div className={styles.statValue}>{stats.totalArticles}</div>
@@ -87,7 +90,9 @@ export default function Admin() {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statIcon}>✅</div>
+          <div className={styles.statIcon}>
+            <MdPublish size={32} />
+          </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Published</div>
             <div className={styles.statValue}>{stats.publishedArticles}</div>
@@ -95,7 +100,9 @@ export default function Admin() {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statIcon}>📝</div>
+          <div className={styles.statIcon}>
+            <MdDrafts size={32} />
+          </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Drafts</div>
             <div className={styles.statValue}>{stats.draftArticles}</div>
@@ -103,7 +110,9 @@ export default function Admin() {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statIcon}>👁️</div>
+          <div className={styles.statIcon}>
+            <MdVisibility size={32} />
+          </div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Total Views</div>
             <div className={styles.statValue}>{stats.totalViews.toLocaleString()}</div>

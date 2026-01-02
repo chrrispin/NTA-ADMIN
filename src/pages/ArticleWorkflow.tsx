@@ -209,10 +209,6 @@ export default function ArticleWorkflow() {
         return '#FFA500';
       case 'pending_admin_review':
         return '#1E90FF';
-      case 'pending_super_admin_review':
-        return '#9370DB';
-      case 'approved':
-        return '#32CD32';
       case 'rejected':
         return '#DC143C';
       case 'published':
@@ -225,8 +221,6 @@ export default function ArticleWorkflow() {
   const statusLabels: { [key: string]: string } = {
     draft: 'Draft',
     pending_admin_review: 'Awaiting Admin Review',
-    pending_super_admin_review: 'Awaiting Super Admin Review',
-    approved: 'Approved',
     rejected: 'Rejected',
     published: 'Published',
   };
@@ -255,10 +249,10 @@ export default function ArticleWorkflow() {
             Admin Review
           </button>
           <button
-            className={`${styles.filterBtn} ${filterStatus === 'approved' ? styles.active : ''}`}
-            onClick={() => setFilterStatus('approved')}
+            className={`${styles.filterBtn} ${filterStatus === 'rejected' ? styles.active : ''}`}
+            onClick={() => setFilterStatus('rejected')}
           >
-            Approved
+            Rejected
           </button>
           <button
             className={`${styles.filterBtn} ${filterStatus === 'published' ? styles.active : ''}`}
@@ -319,20 +313,20 @@ export default function ArticleWorkflow() {
                   </button>
                 )}
 
-                {/* Admin: Approve or Reject Pending Admin Review */}
+                {/* Admin: Approve & Publish or Reject Pending Admin Review */}
                 {article.status === 'pending_admin_review' && userRole === 'admin' && (
                   <>
                     <button
-                      className={`${styles.btn} ${styles.approveBtn}`}
+                      className={`${styles.btn} ${styles.publishBtn}`}
                       onClick={() => handleApprove(article.id)}
                     >
-                      Approve for Super Admin
+                      ✅ Approve & Publish
                     </button>
                     <button
                       className={`${styles.btn} ${styles.rejectBtn}`}
                       onClick={() => setRejectingId(article.id)}
                     >
-                      Reject
+                      ❌ Reject
                     </button>
                   </>
                 )}
@@ -355,16 +349,6 @@ export default function ArticleWorkflow() {
                   </>
                 )}
 
-                {/* Super Admin: Publish Approved Articles */}
-                {article.status === 'approved' && userRole === 'super_admin' && (
-                  <button
-                    className={`${styles.btn} ${styles.publishBtn}`}
-                    onClick={() => handlePublish(article.id)}
-                  >
-                    Publish to Website
-                  </button>
-                )}
-
                 {/* Editor/Viewer: Resubmit Rejected Articles */}
                 {article.status === 'rejected' && (userRole === 'editor' || userRole === 'viewer') && (
                   <button
@@ -375,22 +359,16 @@ export default function ArticleWorkflow() {
                   </button>
                 )}
 
-                {/* Display warning if user doesn't have permission */}
-                {article.status === 'pending_admin_review' && userRole !== 'admin' && userRole !== 'super_admin' && (
+                {/* Display info if user doesn't have permission */}
+                {article.status === 'pending_admin_review' && userRole !== 'admin' && (
                   <div className={styles.noPermission}>
-                    ℹ️ Waiting for Admin review
+                    ℹ️ Waiting for Admin to review and publish
                   </div>
                 )}
                 
                 {article.status === 'pending_super_admin_review' && userRole !== 'super_admin' && (
                   <div className={styles.noPermission}>
                     ℹ️ Waiting for Super Admin review
-                  </div>
-                )}
-                
-                {article.status === 'approved' && userRole !== 'super_admin' && (
-                  <div className={styles.noPermission}>
-                    ℹ️ Ready for Super Admin to publish
                   </div>
                 )}
               </div>

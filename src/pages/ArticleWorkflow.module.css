@@ -179,6 +179,16 @@
   background-color: #5a6268;
 }
 
+.noPermission {
+  padding: 12px 16px;
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  color: #1565c0;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
 .rejectForm {
   border-top: 1px solid #ddd;
   padding-top: 1rem;

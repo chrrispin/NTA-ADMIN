@@ -8,10 +8,13 @@ export default function AdminArticles() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchArticles();
+    // Poll for updates every 5 seconds to show real-time changes
+    const interval = setInterval(fetchArticles, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchArticles = async () => {
@@ -88,16 +91,34 @@ export default function AdminArticles() {
           All ({articles.length})
         </button>
         <button
+          className={`${styles.filterBtn} ${filter === 'draft' ? styles.active : ''}`}
+          onClick={() => setFilter('draft')}
+        >
+          Drafts ({articles.filter(a => a.status === 'draft').length})
+        </button>
+        <button
+          className={`${styles.filterBtn} ${filter === 'pending_admin_review' ? styles.active : ''}`}
+          onClick={() => setFilter('pending_admin_review')}
+        >
+          Pending Review ({articles.filter(a => a.status === 'pending_admin_review').length})
+        </button>
+        <button
+          className={`${styles.filterBtn} ${filter === 'approved' ? styles.active : ''}`}
+          onClick={() => setFilter('approved')}
+        >
+          Approved ({articles.filter(a => a.status === 'approved').length})
+        </button>
+        <button
           className={`${styles.filterBtn} ${filter === 'published' ? styles.active : ''}`}
           onClick={() => setFilter('published')}
         >
           Published ({articles.filter(a => a.status === 'published').length})
         </button>
         <button
-          className={`${styles.filterBtn} ${filter === 'draft' ? styles.active : ''}`}
-          onClick={() => setFilter('draft')}
+          className={`${styles.filterBtn} ${filter === 'rejected' ? styles.active : ''}`}
+          onClick={() => setFilter('rejected')}
         >
-          Drafts ({articles.filter(a => a.status === 'draft').length})
+          Rejected ({articles.filter(a => a.status === 'rejected').length})
         </button>
       </div>
 
@@ -135,8 +156,10 @@ export default function AdminArticles() {
                     )}
                   </td>
                   <td>
-                    <span className={`${styles.badge} ${styles[article.status]}`}>
-                      {article.status?.charAt(0).toUpperCase() + article.status?.slice(1)}
+                    <span className={`${styles.badge} ${styles[article.status || 'draft']}`}>
+                      {article.status === 'pending_admin_review' ? 'Pending Review' :
+                       article.status === 'pending_super_admin_review' ? 'Pending Super Admin' :
+                       article.status?.charAt(0).toUpperCase() + article.status?.slice(1) || 'Draft'}
                     </span>
                   </td>
                   <td>

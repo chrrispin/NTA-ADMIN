@@ -204,6 +204,22 @@
   color: #856404;
 }
 
+.badge.pending_admin_review,
+.badge.pending_super_admin_review {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.badge.approved {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.badge.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
 .actions {
   display: flex;
   gap: 8px;

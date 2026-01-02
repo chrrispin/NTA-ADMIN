@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { authApi } from '../services/adminApi';
 import styles from './ArticleWorkflow.module.css';
 
 interface Article {
@@ -21,9 +22,16 @@ export default function ArticleWorkflow() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [userRole, setUserRole] = useState<string | null>(null);
   const token = localStorage.getItem('adminToken');
 
   useEffect(() => {
+    // Get current user role
+    const user = authApi.getUser();
+    if (user) {
+      setUserRole(user.role);
+    }
+    
     fetchArticles();
   }, [filterStatus]);
 
@@ -301,7 +309,8 @@ export default function ArticleWorkflow() {
               )}
 
               <div className={styles.actions}>
-                {article.status === 'draft' && (
+                {/* Editor/Viewer: Submit Draft */}
+                {article.status === 'draft' && (userRole === 'editor' || userRole === 'viewer') && (
                   <button
                     className={`${styles.btn} ${styles.submitBtn}`}
                     onClick={() => handleSubmit(article.id)}
@@ -310,7 +319,26 @@ export default function ArticleWorkflow() {
                   </button>
                 )}
 
-                {article.status === 'pending_admin_review' && (
+                {/* Admin: Approve or Reject Pending Admin Review */}
+                {article.status === 'pending_admin_review' && userRole === 'admin' && (
+                  <>
+                    <button
+                      className={`${styles.btn} ${styles.approveBtn}`}
+                      onClick={() => handleApprove(article.id)}
+                    >
+                      Approve for Super Admin
+                    </button>
+                    <button
+                      className={`${styles.btn} ${styles.rejectBtn}`}
+                      onClick={() => setRejectingId(article.id)}
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+
+                {/* Super Admin: Approve or Reject Pending Super Admin Review */}
+                {article.status === 'pending_super_admin_review' && userRole === 'super_admin' && (
                   <>
                     <button
                       className={`${styles.btn} ${styles.approveBtn}`}
@@ -327,39 +355,43 @@ export default function ArticleWorkflow() {
                   </>
                 )}
 
-                {article.status === 'pending_super_admin_review' && (
-                  <>
-                    <button
-                      className={`${styles.btn} ${styles.approveBtn}`}
-                      onClick={() => handleApprove(article.id)}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className={`${styles.btn} ${styles.rejectBtn}`}
-                      onClick={() => setRejectingId(article.id)}
-                    >
-                      Reject
-                    </button>
-                  </>
-                )}
-
-                {article.status === 'approved' && (
+                {/* Super Admin: Publish Approved Articles */}
+                {article.status === 'approved' && userRole === 'super_admin' && (
                   <button
                     className={`${styles.btn} ${styles.publishBtn}`}
                     onClick={() => handlePublish(article.id)}
                   >
-                    Publish
+                    Publish to Website
                   </button>
                 )}
 
-                {article.status === 'rejected' && (
+                {/* Editor/Viewer: Resubmit Rejected Articles */}
+                {article.status === 'rejected' && (userRole === 'editor' || userRole === 'viewer') && (
                   <button
                     className={`${styles.btn} ${styles.submitBtn}`}
                     onClick={() => handleSubmit(article.id)}
                   >
-                    Resubmit
+                    Resubmit for Review
                   </button>
+                )}
+
+                {/* Display warning if user doesn't have permission */}
+                {article.status === 'pending_admin_review' && userRole !== 'admin' && userRole !== 'super_admin' && (
+                  <div className={styles.noPermission}>
+                    ℹ️ Waiting for Admin review
+                  </div>
+                )}
+                
+                {article.status === 'pending_super_admin_review' && userRole !== 'super_admin' && (
+                  <div className={styles.noPermission}>
+                    ℹ️ Waiting for Super Admin review
+                  </div>
+                )}
+                
+                {article.status === 'approved' && userRole !== 'super_admin' && (
+                  <div className={styles.noPermission}>
+                    ℹ️ Ready for Super Admin to publish
+                  </div>
                 )}
               </div>
 

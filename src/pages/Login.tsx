@@ -26,7 +26,9 @@ export default function Login() {
     try {
       setLoading(true);
       setError(null);
+      console.log('Attempting login with email:', email);
       const response = await authApi.login(email.trim(), password);
+      console.log('Login response:', response);
       if (response.success) {
         if (rememberMe) {
           authApi.setRememberedEmail(email.trim());
@@ -38,7 +40,7 @@ export default function Login() {
         setError(response.message || 'Login failed');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Login error:', err);
       setError('Login failed');
     } finally {
       setLoading(false);

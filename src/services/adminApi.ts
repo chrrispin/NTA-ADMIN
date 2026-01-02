@@ -1,5 +1,9 @@
-// ✅ Correct API base URL fallback
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nta-backend-re6q.onrender.com/api';
+// ✅ For development, use Vite proxy; for production use environment variable
+export const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? '/api'
+    : 'https://nta-backend-re6q.onrender.com/api'
+);
 
 export interface SubLink {
   title?: string;

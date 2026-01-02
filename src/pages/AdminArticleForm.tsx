@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { articlesApi, API_BASE_URL } from '../services/adminApi';
+import { articlesApi, authApi, API_BASE_URL } from '../services/adminApi';
 import type { Article, SubLink, MediaItem } from '../services/adminApi';
 import styles from './AdminArticleForm.module.css';
 
@@ -29,6 +29,7 @@ export default function AdminArticleForm() {
   const [imageSource, setImageSource] = useState<'url' | 'upload'>('url');
   const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Article>({
     title: '',
@@ -47,6 +48,12 @@ export default function AdminArticleForm() {
   });
 
   useEffect(() => {
+    // Get current user role
+    const user = authApi.getUser();
+    if (user) {
+      setUserRole(user.role);
+    }
+    
     if (isEditing) {
       loadArticle();
     }
@@ -316,6 +323,7 @@ export default function AdminArticleForm() {
         ...formData,
         slug: formData.slug && formData.slug.trim() ? formData.slug.trim() : slugify(formData.title),
         subLinks: Array.isArray(formData.subLinks) ? formData.subLinks : [],
+        status: 'draft', // Force all new/edited articles to draft status - must go through workflow to publish
       };
       if (isEditing) {
         response = await articlesApi.update(id!, payload);
@@ -398,19 +406,32 @@ export default function AdminArticleForm() {
               </select>
             </div>
 
-            <div>
-              <label htmlFor="status">Status *</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-            </div>
+            {(userRole === 'admin' || userRole === 'super_admin') && (
+              <div>
+                <label htmlFor="status">Status *</label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+                <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                  Admin only: Can directly publish articles
+                </small>
+              </div>
+            )}
+
+            {(userRole === 'editor' || userRole === 'viewer') && (
+              <div style={{ padding: '12px', backgroundColor: '#e3f2fd', borderRadius: '6px', borderLeft: '4px solid #2196f3' }}>
+                <small style={{ color: '#1565c0', fontWeight: '600' }}>
+                  ℹ️ Your articles are automatically saved as drafts. Use "Workflow & Approval" to submit for review.
+                </small>
+              </div>
+            )}
           </div>
 
           <div className={styles.twoCol}>

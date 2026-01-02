@@ -38,10 +38,80 @@
   padding: 2rem;
   border-radius: 8px;
   margin-bottom: 2rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.profileUploadSection {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+}
+
+.profilePreviewContainer {
+  flex-shrink: 0;
+}
+
+.profilePreview {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profilePreviewPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.uploadInputContainer {
+  flex: 1;
+}
+
+.fileInputLabel {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.fileInput {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.fileInput:hover {
+  border-color: #007bff;
+}
+
+.uploadHint {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.85rem;
+  color: #6c757d;
 }
 
 .formGroup {

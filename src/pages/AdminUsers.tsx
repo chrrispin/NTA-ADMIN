@@ -7,6 +7,7 @@ interface User {
   email: string;
   role: string;
   created_at: string;
+  profile_picture?: string;
 }
 
 export default function AdminUsers() {
@@ -15,11 +16,13 @@ export default function AdminUsers() {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     role: 'admin',
+    profilePicture: null as File | null,
   });
 
   useEffect(() => {
@@ -73,7 +76,9 @@ export default function AdminUsers() {
       email: user.email,
       password: '',
       role: user.role,
+      profilePicture: null,
     });
+    setProfilePreview(user.profile_picture || null);
     setShowForm(true);
   };
 
@@ -125,17 +130,20 @@ export default function AdminUsers() {
       
       if (editingId) {
         // Update existing user
+        const formDataWithFile = new FormData();
+        formDataWithFile.append('name', formData.name);
+        formDataWithFile.append('email', formData.email);
+        formDataWithFile.append('role', formData.role);
+        if (formData.profilePicture) {
+          formDataWithFile.append('profilePicture', formData.profilePicture);
+        }
+
         const response = await fetch(`/api/auth/users/${editingId}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
           },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            role: formData.role,
-          }),
+          body: formDataWithFile,
         });
         
         if (!response.ok) {
@@ -149,29 +157,39 @@ export default function AdminUsers() {
         if (data.success) {
           setUsers(users.map(u =>
             u.id === editingId
-              ? { ...u, name: formData.name, email: formData.email, role: formData.role }
+              ? { 
+                  ...u, 
+                  name: formData.name, 
+                  email: formData.email, 
+                  role: formData.role,
+                  profile_picture: data.data?.profile_picture || u.profile_picture
+                }
               : u
           ));
           setShowForm(false);
           setEditingId(null);
-          setFormData({ name: '', email: '', password: '', role: 'admin' });
+          setFormData({ name: '', email: '', password: '', role: 'admin', profilePicture: null });
+          setProfilePreview(null);
         } else {
           setError(data.message || 'Failed to update user');
         }
       } else {
         // Create new user
+        const formDataWithFile = new FormData();
+        formDataWithFile.append('name', formData.name);
+        formDataWithFile.append('email', formData.email);
+        formDataWithFile.append('password', formData.password);
+        formDataWithFile.append('role', formData.role);
+        if (formData.profilePicture) {
+          formDataWithFile.append('profilePicture', formData.profilePicture);
+        }
+
         const response = await fetch(`/api/auth/users`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
           },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-            role: formData.role,
-          }),
+          body: formDataWithFile,
         });
         
         if (!response.ok) {
@@ -189,9 +207,11 @@ export default function AdminUsers() {
             email: formData.email,
             role: formData.role,
             created_at: new Date().toISOString(),
+            profile_picture: data.data.profile_picture,
           }]);
           setShowForm(false);
-          setFormData({ name: '', email: '', password: '', role: 'admin' });
+          setFormData({ name: '', email: '', password: '', role: 'admin', profilePicture: null });
+          setProfilePreview(null);
         } else {
           setError(data.message || 'Failed to create user');
         }
@@ -199,6 +219,18 @@ export default function AdminUsers() {
     } catch (err) {
       console.error('Error submitting form:', err);
       setError(editingId ? 'Failed to update user' : 'Failed to create user');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, profilePicture: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -211,7 +243,8 @@ export default function AdminUsers() {
           onClick={() => {
             setShowForm(!showForm);
             setEditingId(null);
-            setFormData({ name: '', email: '', password: '', role: 'admin' });
+            setFormData({ name: '', email: '', password: '', role: 'admin', profilePicture: null });
+            setProfilePreview(null);
             setError(null);
           }}
         >
@@ -224,6 +257,29 @@ export default function AdminUsers() {
       {showForm && (
         <form className={styles.form} onSubmit={handleSubmit}>
           <h3>{editingId ? 'Edit User' : 'Create New User'}</h3>
+          
+          <div className={styles.profileUploadSection}>
+            <div className={styles.profilePreviewContainer}>
+              {profilePreview ? (
+                <img src={profilePreview} alt="Profile preview" className={styles.profilePreview} />
+              ) : (
+                <div className={styles.profilePreviewPlaceholder}>
+                  <span>No image</span>
+                </div>
+              )}
+            </div>
+            <div className={styles.uploadInputContainer}>
+              <label className={styles.fileInputLabel}>Upload Profile Picture</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className={styles.fileInput}
+              />
+              <p className={styles.uploadHint}>JPG, PNG or GIF (Max 5MB)</p>
+            </div>
+          </div>
+
           <div className={styles.formGroup}>
             <label>Name</label>
             <input

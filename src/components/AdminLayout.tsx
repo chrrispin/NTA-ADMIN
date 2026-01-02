@@ -9,6 +9,7 @@ interface UserProfile {
   name?: string;
   email?: string;
   role?: string;
+  profile_picture?: string;
 }
 
 export default function AdminLayout() {
@@ -47,7 +48,11 @@ export default function AdminLayout() {
         {user && (
           <div className={styles.profileSection}>
             <div className={styles.profileAvatar}>
-              {getInitials(user.name)}
+              {user.profile_picture ? (
+                <img src={user.profile_picture} alt={user.name} className={styles.profileImage} />
+              ) : (
+                getInitials(user.name)
+              )}
             </div>
             <div className={styles.profileInfo}>
               <div className={styles.profileName}>{user.name || 'User'}</div>

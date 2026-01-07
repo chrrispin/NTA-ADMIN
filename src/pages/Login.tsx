@@ -10,6 +10,13 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(!!authApi.getRememberedEmail());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [reqName, setReqName] = useState('');
+  const [reqEmail, setReqEmail] = useState('');
+  const [reqMessage, setReqMessage] = useState('');
+  const [reqLoading, setReqLoading] = useState(false);
+  const [reqSuccess, setReqSuccess] = useState<string | null>(null);
+  const [reqError, setReqError] = useState<string | null>(null);
 
   useEffect(() => {
     if (authApi.isAuthenticated()) {
@@ -50,15 +57,16 @@ export default function Login() {
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
-        <div className={styles.card}>
-          <div className={styles.header}>
-            <h1>Welcome back</h1>
-            <p>Sign in to manage content</p>
-          </div>
+        <div className={styles.left}>
+          <div className={styles.card}>
+            <div className={styles.header}>
+              <h1>Sign In</h1>
+              <p>Enter your email and password to sign in!</p>
+            </div>
 
-          {error && <div className={styles.error}>{error}</div>}
+            {error && <div className={styles.error}>{error}</div>}
 
-          <form className={styles.form} onSubmit={handleSubmit}>
+            <form className={styles.form} onSubmit={handleSubmit}>
             <div className={styles.formGroup}>
               <label htmlFor="email">Email</label>
               <input
@@ -105,16 +113,98 @@ export default function Login() {
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>
-          </form>
+            </form>
 
-          <div className={styles.footer}>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>
-              Need access? Contact your administrator
-            </p>
+            <div className={styles.footer}>
+              {!showRequestForm ? (
+                <p style={{ color: '#666', fontSize: '0.9rem' }}>
+                  Don't have an account?{' '}
+                  <button
+                    type="button"
+                    className={styles.link}
+                    onClick={() => {
+                      setShowRequestForm(true);
+                      setReqEmail(email || '');
+                      setReqName('');
+                      setReqMessage('');
+                      setReqError(null);
+                      setReqSuccess(null);
+                    }}
+                  >
+                    Request it from admin
+                  </button>
+                </p>
+              ) : (
+                <div className={styles.requestForm}>
+                  {reqSuccess ? (
+                    <div className={styles.requestSuccess}>{reqSuccess}</div>
+                  ) : (
+                    <>
+                      {reqError && <div className={styles.error}>{reqError}</div>}
+                      <div className={styles.formGroup}>
+                        <label>Name</label>
+                        <input value={reqName} onChange={e => setReqName(e.target.value)} />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Email</label>
+                        <input value={reqEmail} onChange={e => setReqEmail(e.target.value)} />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Message (optional)</label>
+                        <textarea value={reqMessage} onChange={e => setReqMessage(e.target.value)} rows={3} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <button
+                          type="button"
+                          className={styles.submitBtn}
+                          onClick={async () => {
+                            setReqError(null);
+                            if (!reqName.trim() || !reqEmail.trim()) {
+                              setReqError('Name and email are required');
+                              return;
+                            }
+                            try {
+                              setReqLoading(true);
+                              const resp = await fetch('/api/auth/request-access', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: reqName, email: reqEmail, message: reqMessage })
+                              });
+                              const json = await resp.json().catch(() => null);
+                              if (!resp.ok) {
+                                setReqError((json && json.message) || `Request failed (Status: ${resp.status})`);
+                                return;
+                              }
+                              setReqSuccess((json && json.message) || 'Request submitted');
+                              setReqName(''); setReqEmail(''); setReqMessage('');
+                            } catch (err) {
+                              console.error('Request access error:', err);
+                              setReqError('Failed to submit request');
+                            } finally { setReqLoading(false); }
+                          }}
+                          disabled={reqLoading}
+                        >
+                          {reqLoading ? 'Sending...' : 'Send Request'}
+                        </button>
+                        <button type="button" className={styles.cancelBtn} onClick={() => setShowRequestForm(false)}>Cancel</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className={styles.background}></div>
+        <aside className={styles.right}>
+          <div className={styles.brandCenter}>
+            <div className={styles.brandLogo}>
+              <img src="/ad.PNG" alt="NTA logo" className='w-12 h-12' />
+            </div>
+            <div className={styles.brandName}>New Time Africa</div>
+            <div className={styles.brandTag}>delivering timely and trustworthy news from across the continent.</div>
+          </div>
+        </aside>
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ export default function ArticleWorkflow() {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [userRole, setUserRole] = useState<string | null>(null);
-  const token = localStorage.getItem('adminToken');
+  const getToken = () => localStorage.getItem('adminToken');
 
   useEffect(() => {
     // Get current user role
@@ -39,7 +39,13 @@ export default function ArticleWorkflow() {
     try {
       setLoading(true);
       setError(null);
-      
+      const token = getToken();
+      if (!token) {
+        setError('Not authenticated. Please log in.');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/articles/workflow/my-articles', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -47,6 +53,12 @@ export default function ArticleWorkflow() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('adminToken');
+          setError('Unauthorized — please log in.');
+          return;
+        }
+
         const errorData = await response.json();
         setError(errorData.message || `Failed to fetch articles (Status: ${response.status})`);
         return;
@@ -70,6 +82,12 @@ export default function ArticleWorkflow() {
 
   const handleApprove = async (articleId: number) => {
     try {
+      const token = getToken();
+      if (!token) {
+        setError('Not authenticated. Please log in.');
+        return;
+      }
+
       const response = await fetch(`/api/articles/${articleId}/approve`, {
         method: 'POST',
         headers: {
@@ -80,6 +98,12 @@ export default function ArticleWorkflow() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('adminToken');
+          setError('Unauthorized — please log in.');
+          return;
+        }
+
         const errorData = await response.json();
         setError(errorData.message || 'Failed to approve article');
         return;
@@ -107,6 +131,12 @@ export default function ArticleWorkflow() {
     }
 
     try {
+      const token = getToken();
+      if (!token) {
+        setError('Not authenticated. Please log in.');
+        return;
+      }
+
       const response = await fetch(`/api/articles/${articleId}/reject`, {
         method: 'POST',
         headers: {
@@ -117,6 +147,12 @@ export default function ArticleWorkflow() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('adminToken');
+          setError('Unauthorized — please log in.');
+          return;
+        }
+
         const errorData = await response.json();
         setError(errorData.message || 'Failed to reject article');
         return;
@@ -141,6 +177,12 @@ export default function ArticleWorkflow() {
 
   const handleSubmit = async (articleId: number) => {
     try {
+      const token = getToken();
+      if (!token) {
+        setError('Not authenticated. Please log in.');
+        return;
+      }
+
       const response = await fetch(`/api/articles/${articleId}/submit-for-review`, {
         method: 'POST',
         headers: {
@@ -151,6 +193,12 @@ export default function ArticleWorkflow() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('adminToken');
+          setError('Unauthorized — please log in.');
+          return;
+        }
+
         const errorData = await response.json();
         setError(errorData.message || 'Failed to submit article');
         return;

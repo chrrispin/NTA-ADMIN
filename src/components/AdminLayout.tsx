@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { BiLogOut } from 'react-icons/bi';
-import { authApi } from '../services/adminApi';
+import { authApi, API_BASE_URL } from '../services/adminApi';
 import styles from './AdminLayout.module.css';
 
 interface UserProfile {
@@ -38,6 +38,18 @@ export default function AdminLayout() {
       .toUpperCase();
   };
 
+  const resolveMediaUrl = (url?: string) => {
+    if (!url) return undefined;
+    if (url.startsWith('http')) return url;
+    // If backend stores paths like /uploads/..., ensure we prefix backend origin
+    try {
+      const backendRoot = API_BASE_URL.replace(/\/api$/, '');
+      return `${backendRoot}${url}`;
+    } catch (e) {
+      return url;
+    }
+  };
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
@@ -49,7 +61,7 @@ export default function AdminLayout() {
           <div className={styles.profileSection}>
             <div className={styles.profileAvatar}>
               {user.profile_picture ? (
-                <img src={user.profile_picture} alt={user.name} className={styles.profileImage} />
+                <img src={resolveMediaUrl(user.profile_picture)} alt={user.name} className={styles.profileImage} />
               ) : (
                 getInitials(user.name)
               )}

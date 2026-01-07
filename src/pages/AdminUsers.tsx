@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './AdminUsers.module.css';
 
 interface User {
@@ -14,6 +14,8 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const successTimeoutRef = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
@@ -104,6 +106,10 @@ export default function AdminUsers() {
       const data = await response.json();
       if (data.success) {
         setUsers(users.filter(u => u.id !== userId));
+        setError(null);
+        setSuccess('User deleted successfully');
+        if (successTimeoutRef.current) window.clearTimeout(successTimeoutRef.current);
+        successTimeoutRef.current = window.setTimeout(() => setSuccess(null), 4000);
       } else {
         setError(data.message || 'Failed to delete user');
       }
@@ -147,25 +153,45 @@ export default function AdminUsers() {
         });
         
         if (!response.ok) {
-          const errorData = await response.json();
-          setError(errorData.message || `Failed to update user (Status: ${response.status})`);
-          console.error('Update user error:', errorData);
+          let errorMessage = `Failed to update user (Status: ${response.status})`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+            console.error('Update user error:', errorData);
+          } catch (parseErr) {
+            const text = await response.text();
+            console.error('Update user non-JSON response:', text);
+            if (text) errorMessage = text;
+          }
+
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            setError('Unauthorized — please log in.');
+            return;
+          }
+
+          setError(errorMessage);
           return;
         }
         
         const data = await response.json();
         if (data.success) {
-          setUsers(users.map(u =>
+          const updatedUsers = users.map(u =>
             u.id === editingId
-              ? { 
-                  ...u, 
-                  name: formData.name, 
-                  email: formData.email, 
+              ? {
+                  ...u,
+                  name: formData.name,
+                  email: formData.email,
                   role: formData.role,
-                  profile_picture: data.data?.profile_picture || u.profile_picture
+                  profile_picture: data.data?.profile_picture || u.profile_picture,
                 }
               : u
-          ));
+          );
+          setUsers(updatedUsers);
+          setError(null);
+          setSuccess('User updated successfully');
+          if (successTimeoutRef.current) window.clearTimeout(successTimeoutRef.current);
+          successTimeoutRef.current = window.setTimeout(() => setSuccess(null), 4000);
           setShowForm(false);
           setEditingId(null);
           setFormData({ name: '', email: '', password: '', role: 'admin', profilePicture: null });
@@ -193,9 +219,24 @@ export default function AdminUsers() {
         });
         
         if (!response.ok) {
-          const errorData = await response.json();
-          setError(errorData.message || `Failed to create user (Status: ${response.status})`);
-          console.error('Create user error:', errorData);
+          let errorMessage = `Failed to create user (Status: ${response.status})`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+            console.error('Create user error:', errorData);
+          } catch (parseErr) {
+            const text = await response.text();
+            console.error('Create user non-JSON response:', text);
+            if (text) errorMessage = text;
+          }
+
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            setError('Unauthorized — please log in.');
+            return;
+          }
+
+          setError(errorMessage);
           return;
         }
         
@@ -209,6 +250,10 @@ export default function AdminUsers() {
             created_at: new Date().toISOString(),
             profile_picture: data.data.profile_picture,
           }]);
+            setError(null);
+            setSuccess('User created successfully');
+            if (successTimeoutRef.current) window.clearTimeout(successTimeoutRef.current);
+            successTimeoutRef.current = window.setTimeout(() => setSuccess(null), 4000);
           setShowForm(false);
           setFormData({ name: '', email: '', password: '', role: 'admin', profilePicture: null });
           setProfilePreview(null);
@@ -253,6 +298,7 @@ export default function AdminUsers() {
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
+      {success && <div className={styles.success}>{success}</div>}
 
       {showForm && (
         <form className={styles.form} onSubmit={handleSubmit}>

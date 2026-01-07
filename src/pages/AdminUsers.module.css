@@ -165,6 +165,15 @@
   border: 1px solid #f5c6cb;
 }
 
+.success {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #c3e6cb;
+}
+
 .table {
   overflow-x: auto;
   border-radius: 8px;

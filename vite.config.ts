@@ -8,12 +8,7 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     open: '/admin',
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
-    },
+    // Proxy disabled - using direct API URL from .env (VITE_API_URL)
+    // This allows connecting to Render backend directly
   },
 })

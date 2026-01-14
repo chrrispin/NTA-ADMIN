@@ -18,6 +18,14 @@ export interface MediaItem {
 }
 
 // Admin Article shape aligned with backend while keeping existing fields
+export type ArticleStatus =
+  | 'published'
+  | 'draft'
+  | 'pending_admin_review'
+  | 'pending_super_admin_review'
+  | 'approved'
+  | 'rejected';
+
 export interface Article {
   id?: string;
   // Core
@@ -30,7 +38,7 @@ export interface Article {
   category: string; // maps to backend section
   page?: string; // backend page
   author?: string;
-  status: 'published' | 'draft'; // maps to backend is_live
+  status: ArticleStatus; // maps to backend status/is_live
   // Feature flags
   isAudioPick?: boolean; // for AudioCarousel
   isHot?: boolean; // for HotNews
@@ -84,16 +92,21 @@ export const articlesApi = {
     const json = await response.json();
     
     // Transform backend response to frontend format
-    const articles = (json.articles || []).map((article: any) => ({
+    const articles = (json.articles || []).map((article: any) => {
+      const resolvedStatus: ArticleStatus = article.status
+        || (article.is_live ? 'published' : 'draft');
+
+      return {
       ...article,
-      status: article.is_live ? 'published' : 'draft',
+        status: resolvedStatus,
       category: article.section,
       excerpt: article.summary || '',
       featuredImage: article.image_url || '',
       createdAt: article.created_at || article.updated_at || new Date().toISOString(),
       updatedAt: article.updated_at || new Date().toISOString(),
       views: typeof article.views === 'number' ? article.views : 0,
-    })) as Article[];
+      } as Article;
+    }) as Article[];
     
     return {
       success: response.ok,
@@ -119,6 +132,7 @@ export const articlesApi = {
       image_url: article.featuredImage || null,
       summary: article.excerpt || null,
       content: article.content || null,
+      status: article.status,
       is_live: article.status === 'published',
       page: article.page || 'Home',
       isAudioPick: article.isAudioPick || false,
@@ -146,6 +160,7 @@ export const articlesApi = {
       image_url: article.featuredImage,
       summary: article.excerpt,
       content: article.content,
+      status: article.status,
       is_live: article.status === 'published',
       page: article.page,
       isAudioPick: article.isAudioPick || false,

@@ -63,7 +63,19 @@ export default function AdminArticleForm() {
     try {
       setLoading(true);
       setError(null);
-      const response = await articlesApi.getById(id!);
+      
+      if (!id) {
+        setError('Article ID is required');
+        setLoading(false);
+        return;
+      }
+      
+      const response = await articlesApi.getById(id);
+      
+      if (!response) {
+        setError('No response from server');
+        return;
+      }
       
       if (response.success && response.data) {
         const data: any = response.data;
@@ -83,12 +95,16 @@ export default function AdminArticleForm() {
           isAudioPick: data.isAudioPick || false,
           isHot: data.isHot || false,
         }));
-      } else {
+        setError(null);
+      } else if (response.success === false) {
         setError(response.message || 'Failed to load article');
+      } else {
+        setError('Failed to load article - unexpected response format');
       }
-    } catch (err) {
-      setError('Failed to load article');
-      console.error(err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load article';
+      setError(errorMessage);
+      console.error('Error loading article:', err);
     } finally {
       setLoading(false);
     }
@@ -325,20 +341,31 @@ export default function AdminArticleForm() {
         subLinks: Array.isArray(formData.subLinks) ? formData.subLinks : [],
         status: 'draft', // Force all new/edited articles to draft status - must go through workflow to publish
       };
+      
+      console.log('📝 Submitting article:', { isEditing, id, payloadKeys: Object.keys(payload) });
+      
       if (isEditing) {
         response = await articlesApi.update(id!, payload);
       } else {
         response = await articlesApi.create(payload);
       }
 
-      if (response.success) {
+      console.log('📨 API Response:', response);
+
+      if (response && response.success) {
+        setError(null);
         navigate('/admin/articles');
+      } else if (response) {
+        const errorMsg = response.message || 'Failed to save article';
+        console.error('❌ Save failed:', errorMsg);
+        setError(errorMsg);
       } else {
-        setError(response.message || 'Failed to save article');
+        setError('No response from server');
       }
-    } catch (err) {
-      setError('Failed to save article');
-      console.error(err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save article';
+      console.error('❌ Error saving article:', err);
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
